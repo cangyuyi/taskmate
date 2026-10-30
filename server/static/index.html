@@ -1,0 +1,1901 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>任务助理 · 控制台</title>
+<style>
+  /* ---------------------------------------------------------------- 基础 */
+  *, *::before, *::after { box-sizing: border-box; }
+
+  :root {
+    color-scheme: light dark;
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+    --card-2: #F7F7FA;
+    --text: #1C1C1E;
+    --text-2: #6E6E73;
+    --text-3: #AEAEB2;
+    --line: rgba(60, 60, 67, 0.09);
+    --line-2: rgba(60, 60, 67, 0.16);
+    --check-border: #C7C7CC;
+    --accent: #4C68EC;
+    --accent-2: #3B55DE;
+    --accent-soft: rgba(76, 104, 236, 0.10);
+    --danger: #FF3B30;
+    --danger-soft: rgba(255, 59, 48, 0.10);
+    --warn: #FF9500;
+    --warn-soft: rgba(255, 149, 0, 0.12);
+    --ok: #34C759;
+    --ok-soft: rgba(52, 199, 89, 0.12);
+    --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 12px 32px -14px rgba(16, 24, 40, 0.10);
+    --radius: 14px;
+    --topbar-bg: rgba(242, 242, 247, 0.82);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #000000;
+      --card: #1C1C1E;
+      --card-2: #242426;
+      --text: #F5F5F7;
+      --text-2: #A1A1A6;
+      --text-3: #6E6E73;
+      --line: rgba(255, 255, 255, 0.08);
+      --line-2: rgba(255, 255, 255, 0.16);
+      --check-border: #48484A;
+      --accent: #5C78F5;
+      --accent-2: #7089FF;
+      --accent-soft: rgba(92, 120, 245, 0.18);
+      --danger: #FF453A;
+      --danger-soft: rgba(255, 69, 58, 0.16);
+      --warn: #FF9F0A;
+      --warn-soft: rgba(255, 159, 10, 0.16);
+      --ok: #30D158;
+      --ok-soft: rgba(48, 209, 88, 0.16);
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.55), 0 18px 40px -20px rgba(0, 0, 0, 0.9);
+      --topbar-bg: rgba(0, 0, 0, 0.72);
+    }
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro SC", "SF Pro Text",
+      "PingFang SC", "Helvetica Neue", "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  button, input { font-family: inherit; }
+  button { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  /* --------------------------------------------------------------- 顶栏 */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--topbar-bg);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    height: 64px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+  .brand-mark {
+    width: 34px; height: 34px; flex: none;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    color: #fff;
+    background: linear-gradient(135deg, #6880FF 0%, #4C68EC 62%, #4059D8 100%);
+    box-shadow: 0 5px 14px -4px rgba(76, 104, 236, 0.55);
+  }
+  .brand-mark svg { width: 18px; height: 18px; }
+  .brand h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+  .brand p {
+    margin: 1px 0 0;
+    font-size: 11.5px;
+    color: var(--text-3);
+    letter-spacing: 0.02em;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+  .status {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12.5px; color: var(--text-2);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .status-dot {
+    position: relative; flex: none;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text-3);
+    transition: background 0.25s ease;
+  }
+  .status-dot.ok { background: var(--ok); }
+  .status-dot.ok::after {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: var(--ok);
+    animation: dot-pulse 2.6s ease-out infinite;
+  }
+  .status-dot.warn { background: var(--warn); }
+  .status-dot.err { background: var(--danger); }
+  @keyframes dot-pulse {
+    0% { transform: scale(1); opacity: 0.4; }
+    65% { transform: scale(2.7); opacity: 0; }
+    100% { transform: scale(2.7); opacity: 0; }
+  }
+
+  .key-field {
+    display: flex; align-items: center;
+    height: 34px;
+    padding: 2px 2px 2px 10px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 1px 1px rgba(16, 24, 40, 0.03);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .key-field:focus-within {
+    border-color: rgba(76, 104, 236, 0.45);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .key-field input {
+    width: 148px;
+    height: 100%;
+    padding: 0;
+    border: 0; outline: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+  }
+  .key-field input::placeholder { color: var(--text-3); }
+  .key-save {
+    height: 28px;
+    padding: 0 11px;
+    border: 0; border-radius: 8px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease;
+  }
+  .key-save:hover { background: var(--accent); color: #fff; }
+
+  /* --------------------------------------------------------------- 布局 */
+  .layout {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 26px 24px 72px;
+    display: grid;
+    grid-template-columns: 264px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+  .sidebar {
+    position: sticky;
+    top: 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .main { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+  /* --------------------------------------------------------------- 统计 */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat {
+    position: relative;
+    padding: 13px 14px 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .stat:hover { transform: translateY(-1px); }
+  .stat .label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11.5px;
+    color: var(--text-2);
+    white-space: nowrap;
+  }
+  .stat .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+  .stat .value {
+    margin-top: 3px;
+    font-size: 25px;
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat[data-kind="today"] .dot { background: var(--accent); }
+  .stat[data-kind="overdue"] .dot { background: var(--danger); }
+  .stat[data-kind="week"] .dot { background: var(--warn); }
+  .stat[data-kind="done"] .dot { background: var(--ok); }
+
+  /* --------------------------------------------------------------- 筛选 */
+  .filters {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+  }
+  .filter {
+    display: flex; align-items: center; gap: 9px;
+    width: 100%;
+    padding: 9px 10px;
+    border: 0; border-radius: 9px;
+    background: transparent;
+    color: var(--text);
+    font-size: 13.5px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease;
+  }
+  .filter:hover { background: var(--card-2); }
+  .filter.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .f-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--text-3); }
+  .filter[data-filter="active"] .f-dot { background: var(--accent); }
+  .filter[data-filter="done"] .f-dot { background: var(--ok); }
+  .filter[data-filter="overdue"] .f-dot { background: var(--danger); }
+  .filter .count {
+    margin-left: auto;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .filter.active .count { color: var(--accent); opacity: 0.8; }
+
+  .side-note {
+    padding: 0 6px;
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: var(--text-3);
+  }
+
+  /* --------------------------------------------------------------- 输入 */
+  .composer {
+    padding: 10px 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .composer:focus-within {
+    border-color: rgba(76, 104, 236, 0.35);
+    box-shadow: 0 0 0 4px var(--accent-soft), var(--shadow-card);
+  }
+  .composer-main { display: flex; align-items: center; gap: 9px; }
+  .plus {
+    display: grid; place-items: center;
+    width: 28px; height: 28px; flex: none;
+    border-radius: 9px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .plus svg { width: 15px; height: 15px; }
+  .composer input[type="text"] {
+    flex: 1; min-width: 0;
+    height: 36px;
+    padding: 0;
+    border: 0; outline: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 14.5px;
+  }
+  .composer input[type="text"]::placeholder { color: var(--text-3); }
+  .icon-btn {
+    display: grid; place-items: center;
+    width: 30px; height: 30px; flex: none;
+    padding: 0;
+    border: 0; border-radius: 8px;
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease, transform 0.2s ease;
+  }
+  .icon-btn:hover { background: var(--card-2); color: var(--text-2); }
+  .icon-btn svg { width: 17px; height: 17px; }
+  .composer.detail-open .icon-btn { color: var(--accent); background: var(--accent-soft); }
+  .add-btn {
+    height: 32px; flex: none;
+    padding: 0 14px;
+    border: 0; border-radius: 9px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px; font-weight: 600;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(2px);
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, background 0.16s ease;
+  }
+  .composer.has-text .add-btn { opacity: 1; transform: none; pointer-events: auto; }
+  .add-btn:hover { background: var(--accent-2); }
+  .add-btn:disabled { opacity: 0.55; cursor: default; }
+
+  .composer-detail {
+    display: none;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 9px;
+    padding: 13px 4px 3px 37px;
+    border-top: 1px dashed var(--line-2);
+  }
+  .composer.detail-open .composer-detail { display: flex; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field > span {
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+  }
+  .field input[type="date"], .field input[type="time"] {
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card-2);
+    color: var(--text);
+    font-size: 12.5px;
+    outline: none;
+    min-width: 128px;
+  }
+  .field input[type="time"] { min-width: 96px; }
+  .field input[type="date"]:focus, .field input[type="time"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .segmented {
+    display: flex;
+    gap: 2px;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card-2);
+  }
+  .segmented button {
+    padding: 0 11px;
+    border: 0; border-radius: 6px;
+    background: transparent;
+    color: var(--text-2);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease;
+  }
+  .segmented button.active {
+    background: var(--card);
+    color: var(--text);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.12);
+  }
+  .clear-detail {
+    margin-left: auto;
+    height: 32px;
+    padding: 0 8px;
+    border: 0; border-radius: 8px;
+    background: transparent;
+    color: var(--text-3);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .clear-detail:hover { color: var(--text-2); background: var(--card-2); }
+
+  /* --------------------------------------------------------------- 列表 */
+  .list-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+    padding: 2px 4px 0;
+  }
+  .list-title { display: flex; align-items: baseline; gap: 7px; font-size: 13px; color: var(--text-2); }
+  .list-title b { font-size: 14px; font-weight: 600; color: var(--text); }
+  .list-title .n { font-variant-numeric: tabular-nums; }
+
+  .switch {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px;
+    color: var(--text-2);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .switch input { position: absolute; width: 0; height: 0; opacity: 0; }
+  .track {
+    position: relative;
+    width: 34px; height: 20px;
+    border-radius: 20px;
+    background: var(--line-2);
+    transition: background 0.2s ease;
+  }
+  .track::after {
+    content: "";
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+    transition: transform 0.2s cubic-bezier(0.3, 0.9, 0.3, 1);
+  }
+  .switch input:checked + .track { background: var(--ok); }
+  .switch input:checked + .track::after { transform: translateX(14px); }
+
+  .list {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+
+  .group-label {
+    display: flex; align-items: center; gap: 7px;
+    padding: 14px 16px 6px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+  }
+  .group-label:first-child { border-top: 0; }
+  .group-label.overdue { color: var(--danger); }
+  .group-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .group-label.overdue .group-count { color: var(--danger); opacity: 0.75; }
+
+  .task {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    padding: 13px 16px;
+    border-top: 1px solid var(--line);
+    transition: background 0.15s ease, opacity 0.2s ease, transform 0.2s ease;
+  }
+  .group-label + .task { border-top: 0; }
+  .task:first-child { border-top: 0; }
+  .task:hover, .task:focus-within { background: var(--card-2); }
+  .task.removing { opacity: 0; transform: translateX(8px); }
+
+  .check {
+    display: grid; place-items: center;
+    width: 22px; height: 22px; flex: none;
+    margin-top: 1px; padding: 0;
+    border: 1.6px solid var(--check-border);
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .check svg {
+    width: 12px; height: 12px;
+    fill: none; stroke: #fff; stroke-width: 2.6;
+    stroke-linecap: round; stroke-linejoin: round;
+    opacity: 0; transform: scale(0.6);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  .check:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .task.done .check { background: var(--accent); border-color: var(--accent); }
+  .task.done .check svg { opacity: 1; transform: none; }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-title {
+    display: inline-block;
+    padding: 1px 2px;
+    margin: -1px -2px;
+    border-radius: 4px;
+    font-size: 14.5px;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+    word-break: break-word;
+    cursor: text;
+    transition: background 0.15s ease;
+  }
+  .task-title:hover { background: var(--accent-soft); }
+  .task.done .task-title {
+    color: var(--text-3);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .task-notes {
+    margin-top: 3px;
+    font-size: 12.5px;
+    color: var(--text-2);
+    word-break: break-word;
+  }
+  .task.done .task-notes { color: var(--text-3); }
+  .title-input {
+    width: 100%;
+    padding: 0 2px;
+    margin: -2px -3px;
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 14.5px;
+    font-weight: 500;
+    outline: none;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .task-meta {
+    display: flex; align-items: center; gap: 7px;
+    flex: none;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+  .due {
+    font-size: 12px;
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .due.overdue { color: var(--danger); font-weight: 500; }
+  .task.done .due { color: var(--text-3); }
+  .badge {
+    padding: 1.5px 6px;
+    border-radius: 5px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .badge.p3 { color: var(--danger); background: var(--danger-soft); }
+  .badge.p2 { color: var(--text-2); background: var(--card-2); border: 1px solid var(--line); }
+  .badge.p1 { color: var(--text-3); background: transparent; border: 1px solid var(--line); }
+  .task.done .badge { opacity: 0.55; }
+
+  .task-del {
+    display: flex; align-items: center; justify-content: flex-end;
+    width: 0; height: 26px;
+    flex: none;
+    overflow: hidden;
+    opacity: 0;
+    transition: width 0.18s ease, opacity 0.18s ease;
+  }
+  .task:hover .task-del, .task:focus-within .task-del { width: 30px; opacity: 1; }
+  .task-del button {
+    display: grid; place-items: center;
+    width: 26px; height: 26px; padding: 0;
+    border: 0; border-radius: 7px;
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+  }
+  .task-del button:hover { background: var(--danger-soft); color: var(--danger); }
+
+  .empty {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 64px 24px;
+    text-align: center;
+    color: var(--text-3);
+  }
+  .empty-icon {
+    display: grid; place-items: center;
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .empty-icon svg { width: 24px; height: 24px; }
+  .empty p { margin: 0; font-size: 13.5px; }
+  .retry-btn {
+    height: 30px;
+    padding: 0 14px;
+    border: 1px solid var(--line-2);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .retry-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .skeleton { display: flex; align-items: center; gap: 13px; padding: 17px 16px; border-top: 1px solid var(--line); }
+  .skeleton:first-child { border-top: 0; }
+  .sk-check { width: 22px; height: 22px; border-radius: 50%; background: var(--card-2); flex: none; }
+  .sk-lines { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+  .sk-line, .sk-meta {
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, var(--card-2) 25%, var(--line) 37%, var(--card-2) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.35s ease infinite;
+  }
+  .sk-line { width: 46%; }
+  .sk-line.short { width: 24%; height: 8px; }
+  .sk-meta { width: 64px; flex: none; }
+  @keyframes shimmer {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+  }
+
+  /* --------------------------------------------------------------- Toast */
+  .toast {
+    position: fixed;
+    left: 50%; bottom: 32px;
+    z-index: 90;
+    display: flex; align-items: center; gap: 12px;
+    max-width: calc(100vw - 40px);
+    padding: 10px 15px;
+    border-radius: 11px;
+    background: rgba(28, 28, 30, 0.92);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    color: #fff;
+    font-size: 13px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+    opacity: 0;
+    transform: translate(-50%, 14px);
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .toast button {
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #9DB0FF;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ------------------------------------------------------------- 连接卡片 */
+  .overlay {
+    position: fixed; inset: 0;
+    z-index: 80;
+    display: grid; place-items: center;
+    padding: 24px;
+    background: rgba(242, 242, 247, 0.72);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+  }
+  @media (prefers-color-scheme: dark) {
+    .overlay { background: rgba(0, 0, 0, 0.62); }
+  }
+  .connect-card {
+    width: min(400px, 100%);
+    padding: 30px 28px 24px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--card);
+    box-shadow: 0 28px 80px -24px rgba(16, 24, 40, 0.35);
+    text-align: center;
+    animation: card-in 0.36s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+  .connect-icon {
+    display: grid; place-items: center;
+    width: 54px; height: 54px;
+    margin: 0 auto 15px;
+    border-radius: 17px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .connect-icon svg { width: 25px; height: 25px; }
+  .connect-card h2 {
+    margin: 0 0 6px;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .connect-card .sub {
+    margin: 0 0 20px;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--text-2);
+  }
+  .connect-card input {
+    width: 100%;
+    height: 42px;
+    margin-bottom: 10px;
+    padding: 0 12px;
+    border: 1px solid var(--line-2);
+    border-radius: 10px;
+    background: var(--card-2);
+    color: var(--text);
+    font-size: 13.5px;
+    letter-spacing: 0.05em;
+    text-align: center;
+    outline: none;
+  }
+  .connect-card input::placeholder { color: var(--text-3); letter-spacing: 0; }
+  .connect-card input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .primary {
+    width: 100%;
+    height: 42px;
+    border: 0; border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s ease, opacity 0.18s ease;
+  }
+  .primary:hover { background: var(--accent-2); }
+  .primary:disabled { opacity: 0.6; cursor: default; }
+  .connect-err {
+    min-height: 17px;
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--danger);
+  }
+  .connect-hint {
+    margin: 12px 0 0;
+    font-size: 11.5px;
+    color: var(--text-3);
+  }
+  .connect-hint code {
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: var(--card-2);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+  }
+  .skip-btn {
+    margin-top: 12px;
+    padding: 4px 8px;
+    border: 0;
+    background: transparent;
+    color: var(--text-3);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .skip-btn:hover { color: var(--text-2); }
+
+  /* --------------------------------------------------------------- 响应式 */
+  @media (max-width: 920px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+      padding: 18px 16px 64px;
+    }
+    .sidebar { position: static; gap: 12px; }
+    .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .stat { padding: 10px 12px; }
+    .stat .value { font-size: 20px; }
+    .filters {
+      flex-direction: row;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter { width: auto; flex: none; padding: 7px 12px; font-size: 12.5px; }
+    .filter .count { display: none; }
+    .side-note { display: none; }
+    .composer-detail { padding-left: 4px; }
+  }
+
+  @media (max-width: 640px) {
+    .topbar-inner { height: 58px; padding: 0 16px; gap: 10px; }
+    .brand { gap: 9px; }
+    .brand-mark { width: 30px; height: 30px; border-radius: 9px; }
+    .brand h1 { font-size: 14.5px; }
+    .brand p { display: none; }
+    .status-text { display: none; }
+    .key-field input { width: 88px; }
+    .key-field { padding-left: 8px; }
+    .topbar-right { gap: 9px; }
+    .layout { padding: 14px 12px 56px; }
+    .stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat { padding: 10px 12px 9px; border-radius: 12px; }
+    .stat .label { font-size: 11px; }
+    .stat .value { font-size: 21px; }
+    .composer { padding: 8px 10px; }
+    .add-btn { display: none; }
+    .composer .plus { width: 26px; height: 26px; }
+    .task { padding: 12px; gap: 10px; }
+    .task-meta { flex-direction: column-reverse; align-items: flex-end; gap: 4px; }
+    .task-del { width: 26px; opacity: 1; }
+    .task-title { font-size: 14px; }
+    .due { font-size: 11.5px; }
+    .field input[type="date"] { min-width: 118px; }
+    .clear-detail { margin-left: 0; }
+    .empty { padding: 52px 20px; }
+  }
+
+
+  @media (max-width: 420px) {
+    .brand h1 { font-size: 13.5px; }
+    .key-save { display: none; }
+    .key-field { padding-right: 0; }
+    .key-field input { width: 78px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4.2 10.6l3.6 3.6 8-9"></path>
+        </svg>
+      </span>
+      <div>
+        <h1>任务助理 · 控制台</h1>
+        <p>TaskMate 本地同步服务</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="status" id="status" title="连接状态">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-text" id="statusText">未连接</span>
+      </div>
+      <div class="key-field">
+        <input id="keyInput" type="password" placeholder="API Key" autocomplete="off"
+               spellcheck="false" aria-label="API Key">
+        <button id="keySave" class="key-save" type="button">连接</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="layout">
+  <aside class="sidebar">
+    <section class="stats" aria-label="任务统计">
+      <div class="stat" data-kind="today">
+        <div class="label"><span class="dot"></span>今日待办</div>
+        <div class="value" id="statToday">0</div>
+      </div>
+      <div class="stat" data-kind="overdue">
+        <div class="label"><span class="dot"></span>逾期</div>
+        <div class="value" id="statOverdue">0</div>
+      </div>
+      <div class="stat" data-kind="week">
+        <div class="label"><span class="dot"></span>本周</div>
+        <div class="value" id="statWeek">0</div>
+      </div>
+      <div class="stat" data-kind="done">
+        <div class="label"><span class="dot"></span>已完成</div>
+        <div class="value" id="statDone">0</div>
+      </div>
+    </section>
+
+    <nav class="filters" id="filters" aria-label="快捷筛选">
+      <button class="filter active" type="button" data-filter="all">
+        <span class="f-dot"></span>全部<span class="count" id="countAll">0</span>
+      </button>
+      <button class="filter" type="button" data-filter="active">
+        <span class="f-dot"></span>待办<span class="count" id="countActive">0</span>
+      </button>
+      <button class="filter" type="button" data-filter="done">
+        <span class="f-dot"></span>已完成<span class="count" id="countDone">0</span>
+      </button>
+      <button class="filter" type="button" data-filter="overdue">
+        <span class="f-dot"></span>逾期<span class="count" id="countOverdue">0</span>
+      </button>
+    </nav>
+
+    <div class="side-note">
+      数据保存于本机 SQLite，每 10 秒自动同步。<br>
+      手机端与本页面共用同一个 API Key。
+    </div>
+  </aside>
+
+  <section class="main">
+    <form class="composer" id="composer" autocomplete="off">
+      <div class="composer-main">
+        <span class="plus" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round">
+            <path d="M10 4.5v11M4.5 10h11"></path>
+          </svg>
+        </span>
+        <input id="newTitle" type="text" placeholder="添加一条任务，按回车保存" aria-label="新任务标题">
+        <button class="icon-btn" id="toggleDetail" type="button" aria-label="展开日期与优先级"
+                aria-expanded="false" title="日期与优先级">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"
+               stroke-linecap="round">
+            <path d="M3.5 6.5h6.5M15 6.5h1.5M3.5 13.5H5M8 13.5h8.5"></path>
+            <circle cx="12.5" cy="6.5" r="1.9"></circle>
+            <circle cx="6.5" cy="13.5" r="1.9"></circle>
+          </svg>
+        </button>
+        <button class="add-btn" id="addBtn" type="submit">添加</button>
+      </div>
+      <div class="composer-detail">
+        <label class="field">
+          <span>日期</span>
+          <input type="date" id="newDate">
+        </label>
+        <label class="field">
+          <span>时间</span>
+          <input type="time" id="newTime">
+        </label>
+        <div class="field">
+          <span>优先级</span>
+          <div class="segmented" id="prioritySeg" role="group" aria-label="优先级">
+            <button type="button" data-priority="1">低</button>
+            <button type="button" data-priority="2" class="active">普通</button>
+            <button type="button" data-priority="3">高</button>
+          </div>
+        </div>
+        <button class="clear-detail" id="clearDetail" type="button">清除</button>
+      </div>
+    </form>
+
+    <div class="list-head">
+      <div class="list-title">
+        <b id="listName">全部任务</b>
+        <span class="n" id="listCount">0 项</span>
+      </div>
+      <label class="switch">
+        <span>自动刷新</span>
+        <input type="checkbox" id="autoRefresh" checked>
+        <span class="track" aria-hidden="true"></span>
+      </label>
+    </div>
+
+    <div class="list" id="taskList" aria-live="polite"></div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="connect-card" role="dialog" aria-modal="true" aria-labelledby="connectTitle">
+    <div class="connect-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+           stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4.5" y="10.5" width="15" height="10" rx="2.6"></rect>
+        <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path>
+        <circle cx="12" cy="15.4" r="1.2" fill="currentColor" stroke="none"></circle>
+      </svg>
+    </div>
+    <h2 id="connectTitle">连接到任务助理</h2>
+    <p class="sub">输入服务端启动日志里打印的 API Key。<br>Key 只保存在这台电脑的浏览器中。</p>
+    <input id="connectKey" type="password" placeholder="粘贴 API Key" autocomplete="off"
+           spellcheck="false" aria-label="API Key">
+    <button id="connectBtn" class="primary" type="button">连接</button>
+    <p class="connect-err" id="connectErr"></p>
+    <p class="connect-hint">服务地址 <code id="serverAddr"></code></p>
+    <button id="skipConnect" class="skip-btn" type="button">稍后再说</button>
+  </div>
+</div>
+
+<noscript>
+  <p style="padding:24px;text-align:center">这个控制台需要启用 JavaScript 才能使用。</p>
+</noscript>
+
+<script>
+(function () {
+  'use strict';
+
+  var LS_KEY = 'taskmate.apiKey';
+  var LS_AUTO = 'taskmate.auto';
+  var DAY_MS = 24 * 60 * 60 * 1000;
+  var POLL_MS = 10000;
+  var PRIORITY_LABEL = { 1: '低', 2: '普通', 3: '高' };
+  var FILTER_NAME = { all: '全部任务', active: '待办', done: '已完成', overdue: '逾期' };
+
+  var CHECK_SVG = '<svg viewBox="0 0 16 16" aria-hidden="true">' +
+    '<path d="M3.2 8.4l3.1 3.1 6.5-6.9"></path></svg>';
+  var TRASH_SVG = '<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" ' +
+    'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M4 6h12M8 6V4.5h4V6M6 6l.7 9.2h6.6L14 6M8.5 9.2v3.4M11.5 9.2v3.4"></path></svg>';
+
+  var state = {
+    apiKey: '',
+    tasks: [],
+    stats: { total: 0, active: 0, done: 0, overdue: 0, today: 0, week: 0 },
+    filter: 'all',
+    autoRefresh: true,
+    connected: false,
+    loading: true,
+    lastSyncAt: null,
+    refreshing: false,
+    loadError: false,
+    authFailed: false,
+    editingId: null,
+    newPriority: 2
+  };
+
+  var toastTimer = null;
+
+  function $(id) { return document.getElementById(id); }
+
+  var els = {
+    status: $('status'),
+    statusDot: $('statusDot'),
+    statusText: $('statusText'),
+    keyInput: $('keyInput'),
+    keySave: $('keySave'),
+    overlay: $('overlay'),
+    connectKey: $('connectKey'),
+    connectBtn: $('connectBtn'),
+    connectErr: $('connectErr'),
+    serverAddr: $('serverAddr'),
+    skipConnect: $('skipConnect'),
+    composer: $('composer'),
+    newTitle: $('newTitle'),
+    newDate: $('newDate'),
+    newTime: $('newTime'),
+    toggleDetail: $('toggleDetail'),
+    addBtn: $('addBtn'),
+    clearDetail: $('clearDetail'),
+    prioritySeg: $('prioritySeg'),
+    filters: $('filters'),
+    taskList: $('taskList'),
+    autoRefresh: $('autoRefresh'),
+    listName: $('listName'),
+    listCount: $('listCount'),
+    statToday: $('statToday'),
+    statOverdue: $('statOverdue'),
+    statWeek: $('statWeek'),
+    statDone: $('statDone'),
+    countAll: $('countAll'),
+    countActive: $('countActive'),
+    countDone: $('countDone'),
+    countOverdue: $('countOverdue'),
+    toast: $('toast')
+  };
+
+  // ------------------------------------------------------------- 工具函数
+
+  function ApiError(message, status) {
+    this.name = 'ApiError';
+    this.message = message;
+    this.status = status || 0;
+  }
+  ApiError.prototype = Object.create(Error.prototype);
+
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+  function startOfDay(date) {
+    var d = new Date(date.getTime());
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }
+
+  function fmtRelative(ts) {
+    if (!ts) return '尚未同步';
+    var seconds = Math.max(0, Math.round((Date.now() - ts) / 1000));
+    if (seconds < 10) return '刚刚';
+    if (seconds < 60) return seconds + ' 秒前';
+    var minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return minutes + ' 分钟前';
+    var hours = Math.floor(minutes / 60);
+    if (hours < 24) return hours + ' 小时前';
+    return Math.floor(hours / 24) + ' 天前';
+  }
+
+  function fmtDue(task) {
+    if (!task.due_at) return null;
+    var due = new Date(task.due_at);
+    var now = new Date();
+    var today0 = startOfDay(now);
+    var day0 = startOfDay(due);
+    var diffDays = Math.round((day0 - today0) / DAY_MS);
+    var hasTime = due.getHours() !== 0 || due.getMinutes() !== 0;
+    var time = hasTime ? pad2(due.getHours()) + ':' + pad2(due.getMinutes()) : '';
+    var monthDay = (due.getMonth() + 1) + '月' + due.getDate() + '日';
+    var label;
+
+    if (diffDays === 0) {
+      label = time ? '今天 ' + time : '今天';
+    } else if (diffDays === 1) {
+      label = time ? '明天 ' + time : '明天';
+    } else if (diffDays < 0) {
+      label = monthDay + (time ? ' ' + time : '');
+    } else if (due.getFullYear() === now.getFullYear()) {
+      label = monthDay + (time ? ' ' + time : '');
+    } else {
+      label = due.getFullYear() + '年' + (due.getMonth() + 1) + '月' + due.getDate() + '日';
+    }
+
+    var overdue = !task.done && task.due_at < today0;
+    return { text: (overdue ? '已逾期 · ' : '') + label, overdue: overdue };
+  }
+
+  function truncate(text, max) {
+    return text.length > max ? text.slice(0, max) + '…' : text;
+  }
+
+  // ----------------------------------------------------------------- 网络
+
+  function api(path, options) {
+    options = options || {};
+    var headers = { 'X-API-Key': state.apiKey };
+    if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+
+    return fetch(path, {
+      method: options.method || 'GET',
+      headers: headers,
+      body: options.body,
+      cache: 'no-store'
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (data) {
+        if (res.status === 401) {
+          handleUnauthorized();
+          throw new ApiError('unauthorized', 401);
+        }
+        if (!res.ok || !data || data.ok === false) {
+          var message = (data && data.error) ? data.error : '请求失败（HTTP ' + res.status + '）';
+          throw new ApiError(message, res.status);
+        }
+        return data;
+      });
+    }, function () {
+      throw new ApiError('网络错误：无法连接服务器', 0);
+    });
+  }
+
+  function handleUnauthorized() {
+    state.connected = false;
+    state.authFailed = true;
+    renderStatus();
+    showConnect('API Key 无效或已更换，请重新输入。');
+  }
+
+  function refresh(options) {
+    options = options || {};
+    if (!state.apiKey || state.refreshing) return Promise.resolve();
+    state.refreshing = true;
+
+    var url = '/api/tasks?include_deleted=0&filter=all';
+
+    return Promise.all([api(url), api('/api/stats')]).then(function (results) {
+      state.tasks = results[0].tasks || [];
+      state.stats = results[1];
+      state.connected = true;
+      state.loading = false;
+      state.loadError = false;
+      state.authFailed = false;
+      state.lastSyncAt = Date.now();
+      hideConnect();
+      if (state.editingId) {
+        renderStats();
+        renderFilterCounts();
+        renderListHeader();
+        renderStatus();
+      } else {
+        render();
+      }
+    }).catch(function (err) {
+      state.loading = false;
+      state.connected = false;
+      state.loadError = true;
+      if (!state.editingId) {
+        renderList();
+        renderListHeader();
+      }
+      renderStatus();
+      if (err.status !== 401 && !options.silent) {
+        toast(err.message || '加载失败');
+      }
+    }).then(function () {
+      state.refreshing = false;
+    });
+  }
+
+  // ----------------------------------------------------------------- 渲染
+
+  function render() {
+    renderStats();
+    renderFilterCounts();
+    renderList();
+    renderStatus();
+    renderListHeader();
+  }
+
+  function renderStats() {
+    els.statToday.textContent = state.stats.today || 0;
+    els.statOverdue.textContent = state.stats.overdue || 0;
+    els.statWeek.textContent = state.stats.week || 0;
+    els.statDone.textContent = state.stats.done || 0;
+  }
+
+  function renderFilterCounts() {
+    els.countAll.textContent = state.stats.total || 0;
+    els.countActive.textContent = state.stats.active || 0;
+    els.countDone.textContent = state.stats.done || 0;
+    els.countOverdue.textContent = state.stats.overdue || 0;
+  }
+
+  function renderListHeader() {
+    els.listName.textContent = FILTER_NAME[state.filter] || '全部任务';
+    var count = displayedTasks().length;
+    els.listCount.textContent = count + ' 项';
+  }
+
+  function renderStatus() {
+    var cls = 'off';
+    var text = '未连接';
+
+    if (state.apiKey && state.loading && !state.lastSyncAt) {
+      cls = 'warn';
+      text = '正在连接…';
+    } else if (state.connected) {
+      if (state.autoRefresh) {
+        cls = 'ok';
+        text = '已连接 · ' + fmtRelative(state.lastSyncAt);
+      } else {
+        cls = 'warn';
+        text = '已暂停 · ' + fmtRelative(state.lastSyncAt);
+      }
+    } else if (state.apiKey && state.lastSyncAt) {
+      cls = 'err';
+      text = '连接中断 · ' + fmtRelative(state.lastSyncAt);
+    } else if (state.apiKey) {
+      cls = 'err';
+      text = '连接失败';
+    }
+
+    els.statusDot.className = 'status-dot ' + cls;
+    els.statusText.textContent = text;
+    els.status.title = state.lastSyncAt
+      ? '最近同步：' + new Date(state.lastSyncAt).toLocaleString('zh-CN')
+      : '还没有成功同步过';
+  }
+
+  function displayedTasks() {
+    var tasks = state.tasks;
+    if (state.filter === 'active') {
+      return tasks.filter(function (t) { return !t.done; });
+    }
+    if (state.filter === 'done') {
+      return tasks.filter(function (t) { return t.done; });
+    }
+    if (state.filter === 'overdue') {
+      var today0 = startOfDay(new Date());
+      return tasks.filter(function (t) {
+        return !t.done && t.due_at && t.due_at < today0;
+      });
+    }
+    return tasks;
+  }
+
+  function groupTasks(tasks) {
+    var buckets = { overdue: [], today: [], week: [], later: [], none: [], done: [] };
+    var today0 = startOfDay(new Date());
+    tasks.forEach(function (task) {
+      if (task.done) { buckets.done.push(task); return; }
+      if (!task.due_at) { buckets.none.push(task); return; }
+      if (task.due_at < today0) { buckets.overdue.push(task); return; }
+      if (task.due_at < today0 + DAY_MS) { buckets.today.push(task); return; }
+      if (task.due_at < today0 + 7 * DAY_MS) { buckets.week.push(task); return; }
+      buckets.later.push(task);
+    });
+    return [
+      { key: 'overdue', label: '已逾期', items: buckets.overdue },
+      { key: 'today', label: '今天', items: buckets.today },
+      { key: 'week', label: '接下来', items: buckets.week },
+      { key: 'later', label: '以后', items: buckets.later },
+      { key: 'none', label: '无日期', items: buckets.none },
+      { key: 'done', label: '已完成', items: buckets.done }
+    ];
+  }
+
+  function renderList() {
+    if (state.loading && !state.tasks.length) {
+      els.taskList.innerHTML = skeletonHTML();
+      return;
+    }
+    if (state.loadError && !state.tasks.length) {
+      els.taskList.innerHTML = errorHTML();
+      return;
+    }
+
+    var tasks = displayedTasks();
+    if (!tasks.length) {
+      els.taskList.innerHTML = emptyHTML();
+      return;
+    }
+
+    var container = document.createDocumentFragment();
+
+    if (state.filter === 'done') {
+      tasks.forEach(function (task) { container.appendChild(taskRow(task)); });
+    } else if (state.filter === 'overdue') {
+      tasks.forEach(function (task) { container.appendChild(taskRow(task)); });
+    } else {
+      groupTasks(tasks).forEach(function (group) {
+        if (!group.items.length) return;
+        container.appendChild(groupLabel(group));
+        group.items.forEach(function (task) { container.appendChild(taskRow(task)); });
+      });
+    }
+
+    els.taskList.innerHTML = '';
+    els.taskList.appendChild(container);
+  }
+
+  function groupLabel(group) {
+    var el = document.createElement('div');
+    el.className = 'group-label' + (group.key === 'overdue' ? ' overdue' : '');
+    var name = document.createElement('span');
+    name.textContent = group.label;
+    var count = document.createElement('span');
+    count.className = 'group-count';
+    count.textContent = group.items.length;
+    el.appendChild(name);
+    el.appendChild(count);
+    return el;
+  }
+
+  function taskRow(task) {
+    var row = document.createElement('div');
+    row.className = 'task' + (task.done ? ' done' : '');
+    row.dataset.id = task.id;
+
+    var check = document.createElement('button');
+    check.type = 'button';
+    check.className = 'check';
+    check.setAttribute('aria-label', task.done ? '标记为未完成' : '标记为已完成');
+    check.setAttribute('aria-pressed', task.done ? 'true' : 'false');
+    check.innerHTML = CHECK_SVG;
+    check.addEventListener('click', function () { toggleDone(task); });
+
+    var body = document.createElement('div');
+    body.className = 'task-body';
+
+    var title = document.createElement('span');
+    title.className = 'task-title';
+    title.textContent = task.title;
+    title.title = '点击编辑标题';
+    title.setAttribute('role', 'button');
+    title.setAttribute('tabindex', '0');
+    title.addEventListener('click', function () { startEdit(task, title); });
+    title.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        startEdit(task, title);
+      }
+    });
+    body.appendChild(title);
+
+    if (task.notes) {
+      var notes = document.createElement('div');
+      notes.className = 'task-notes';
+      notes.textContent = task.notes;
+      body.appendChild(notes);
+    }
+
+    var meta = document.createElement('div');
+    meta.className = 'task-meta';
+
+    var due = fmtDue(task);
+    if (due) {
+      var dueEl = document.createElement('span');
+      dueEl.className = 'due' + (due.overdue ? ' overdue' : '');
+      dueEl.textContent = due.text;
+      meta.appendChild(dueEl);
+    }
+
+    var repeatLabels = { daily: '每天', weekdays: '工作日', weekly: '每周', monthly: '每月' };
+    if (task.repeat_rule && repeatLabels[task.repeat_rule]) {
+      var repeatEl = document.createElement('span');
+      repeatEl.className = 'due';
+      repeatEl.textContent = '· ' + repeatLabels[task.repeat_rule];
+      meta.appendChild(repeatEl);
+    }
+
+    var badge = document.createElement('span');
+    badge.className = 'badge p' + task.priority;
+    badge.textContent = PRIORITY_LABEL[task.priority] || '普通';
+    meta.appendChild(badge);
+
+    var delWrap = document.createElement('div');
+    delWrap.className = 'task-del';
+    var del = document.createElement('button');
+    del.type = 'button';
+    del.title = '删除';
+    del.setAttribute('aria-label', '删除任务');
+    del.innerHTML = TRASH_SVG;
+    del.addEventListener('click', function () { deleteTask(task); });
+    delWrap.appendChild(del);
+
+    row.appendChild(check);
+    row.appendChild(body);
+    row.appendChild(meta);
+    row.appendChild(delWrap);
+
+    return row;
+  }
+
+  function emptyHTML() {
+    var message = '还没有任务，在上面添加一条';
+    if (state.filter === 'done') message = '还没有已完成的任务';
+    if (state.filter === 'overdue') message = '没有逾期任务，继续保持';
+    return '<div class="empty">' +
+      '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M5 12.5l4.2 4.2L19 7"></path></svg></div>' +
+      '<p>' + message + '</p></div>';
+  }
+
+  function errorHTML() {
+    return '<div class="empty">' +
+      '<div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M12 6.5v6.2"></path><circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none"></circle>' +
+      '</svg></div>' +
+      '<p>无法连接服务器，请确认服务已启动</p>' +
+      '<button class="retry-btn" type="button" data-retry>重试</button></div>';
+  }
+
+  function skeletonHTML() {
+    var row = '<div class="skeleton"><span class="sk-check"></span>' +
+      '<span class="sk-lines"><span class="sk-line"></span><span class="sk-line short"></span></span>' +
+      '<span class="sk-meta"></span></div>';
+    return row + row + row;
+  }
+
+  // --------------------------------------------------------------- 操作
+
+  function toggleDone(task) {
+    var next = !task.done;
+    task.done = next;
+    task.updated_at = Date.now();
+    renderList();
+    renderListHeader();
+
+    api('/api/tasks/' + encodeURIComponent(task.id), {
+      method: 'PATCH',
+      body: JSON.stringify({ done: next })
+    }).then(function (res) {
+      if (res && res.task) {
+        var index = state.tasks.findIndex(function (t) { return t.id === task.id; });
+        if (index >= 0) state.tasks[index] = res.task;
+      }
+      return refresh({ silent: true });
+    }).catch(function (err) {
+      toast(err.message || '更新失败');
+      refresh({ silent: true });
+    });
+  }
+
+  function deleteTask(task) {
+    var snapshot = state.tasks.slice();
+    state.tasks = state.tasks.filter(function (t) { return t.id !== task.id; });
+    renderList();
+    renderListHeader();
+
+    api('/api/tasks/' + encodeURIComponent(task.id), { method: 'DELETE' }).then(function () {
+      toast('已删除「' + truncate(task.title, 12) + '」', '撤销', function () {
+        restoreTask(task);
+      });
+      return refresh({ silent: true });
+    }).catch(function (err) {
+      state.tasks = snapshot;
+      renderList();
+      renderListHeader();
+      toast(err.message || '删除失败');
+      refresh({ silent: true });
+    });
+  }
+
+  function restoreTask(task) {
+    api('/api/tasks/' + encodeURIComponent(task.id), {
+      method: 'PATCH',
+      body: JSON.stringify({ deleted: false })
+    }).then(function () {
+      toast('已恢复');
+      return refresh({ silent: true });
+    }).catch(function (err) {
+      toast(err.message || '恢复失败');
+    });
+  }
+
+  function startEdit(task, titleEl) {
+    if (state.editingId) return;
+    state.editingId = task.id;
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'title-input';
+    input.value = task.title;
+    input.setAttribute('aria-label', '编辑任务标题');
+
+    titleEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    var finished = false;
+
+    function finish(save) {
+      if (finished) return;
+      finished = true;
+      state.editingId = null;
+
+      var value = input.value.trim();
+      input.replaceWith(titleEl);
+      titleEl.textContent = task.title;
+
+      if (!save) {
+        renderList();
+        return;
+      }
+      if (!value) {
+        toast('标题不能为空');
+        renderList();
+        return;
+      }
+      if (value === task.title) {
+        renderList();
+        return;
+      }
+
+      task.title = value;
+      titleEl.textContent = value;
+
+      api('/api/tasks/' + encodeURIComponent(task.id), {
+        method: 'PATCH',
+        body: JSON.stringify({ title: value })
+      }).then(function (res) {
+        if (res && res.task) {
+          var index = state.tasks.findIndex(function (t) { return t.id === task.id; });
+          if (index >= 0) state.tasks[index] = res.task;
+        }
+        return refresh({ silent: true });
+      }).catch(function (err) {
+        toast(err.message || '保存失败');
+        refresh({ silent: true });
+      });
+    }
+
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        finish(true);
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        finish(false);
+      }
+    });
+    input.addEventListener('blur', function () { finish(true); });
+  }
+
+  function buildDueAt() {
+    var dateValue = els.newDate.value;
+    var timeValue = els.newTime.value;
+    if (!dateValue && !timeValue) return null;
+
+    var year, month, day;
+    if (dateValue) {
+      var parts = dateValue.split('-');
+      year = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10) - 1;
+      day = parseInt(parts[2], 10);
+    } else {
+      var today = new Date();
+      year = today.getFullYear();
+      month = today.getMonth();
+      day = today.getDate();
+    }
+
+    var hours = 0;
+    var minutes = 0;
+    if (timeValue) {
+      var timeParts = timeValue.split(':');
+      hours = parseInt(timeParts[0], 10);
+      minutes = parseInt(timeParts[1], 10);
+    }
+
+    return new Date(year, month, day, hours, minutes, 0, 0).getTime();
+  }
+
+  function addTask() {
+    var title = els.newTitle.value.trim();
+    if (!title) {
+      els.newTitle.focus();
+      return;
+    }
+
+    var payload = { title: title, priority: state.newPriority };
+    var dueAt = buildDueAt();
+    if (dueAt !== null) payload.due_at = dueAt;
+
+    els.addBtn.disabled = true;
+
+    api('/api/tasks', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (res && res.task) state.tasks.push(res.task);
+      els.newTitle.value = '';
+      els.composer.classList.remove('has-text');
+      resetDetail();
+      toast('已添加');
+      return refresh({ silent: true });
+    }).then(function () {
+      els.newTitle.focus();
+    }).catch(function (err) {
+      toast(err.message || '添加失败');
+    }).then(function () {
+      els.addBtn.disabled = false;
+    });
+  }
+
+  function resetDetail() {
+    els.newDate.value = '';
+    els.newTime.value = '';
+    setPriority(2);
+  }
+
+  function setPriority(priority) {
+    state.newPriority = priority;
+    Array.prototype.forEach.call(els.prioritySeg.querySelectorAll('button'), function (btn) {
+      btn.classList.toggle('active', Number(btn.dataset.priority) === priority);
+    });
+  }
+
+  // ------------------------------------------------------------- 连接流程
+
+  function showConnect(message) {
+    els.overlay.hidden = false;
+    els.connectErr.textContent = message || '';
+    window.setTimeout(function () {
+      if (!els.overlay.hidden) els.connectKey.focus();
+    }, 60);
+  }
+
+  function hideConnect() {
+    els.overlay.hidden = true;
+    els.connectErr.textContent = '';
+  }
+
+  function connectWithKey(rawKey) {
+    var key = String(rawKey || '').trim();
+    if (!key) {
+      els.connectErr.textContent = '请输入 API Key';
+      return;
+    }
+
+    var previous = state.apiKey;
+    state.apiKey = key;
+    els.connectBtn.disabled = true;
+    els.connectBtn.textContent = '连接中…';
+    els.connectErr.textContent = '';
+
+    Promise.all([
+      api('/api/tasks?include_deleted=0&filter=all'),
+      api('/api/stats')
+    ]).then(function (results) {
+      state.tasks = results[0].tasks || [];
+      state.stats = results[1];
+      state.connected = true;
+      state.loading = false;
+      state.loadError = false;
+      state.authFailed = false;
+      state.lastSyncAt = Date.now();
+      localStorage.setItem(LS_KEY, key);
+      els.keyInput.value = key;
+      hideConnect();
+      render();
+    }).catch(function (err) {
+      state.apiKey = previous;
+      if (err.status === 401) {
+        els.connectErr.textContent = 'Key 不正确，请检查启动日志里打印的 API Key。';
+      } else {
+        els.connectErr.textContent = err.message || '连接失败';
+      }
+      renderStatus();
+    }).then(function () {
+      els.connectBtn.disabled = false;
+      els.connectBtn.textContent = '连接';
+    });
+  }
+
+  // ---------------------------------------------------------------- 事件
+
+  els.taskList.addEventListener('click', function (event) {
+    if (event.target.closest('[data-retry]')) refresh();
+  });
+
+  els.composer.addEventListener('submit', function (event) {
+    event.preventDefault();
+    addTask();
+  });
+
+  els.newTitle.addEventListener('input', function () {
+    els.composer.classList.toggle('has-text', els.newTitle.value.trim().length > 0);
+  });
+
+  els.toggleDetail.addEventListener('click', function () {
+    var open = els.composer.classList.toggle('detail-open');
+    els.toggleDetail.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      els.newDate.focus();
+    }
+  });
+
+  els.clearDetail.addEventListener('click', function () {
+    resetDetail();
+    els.newTitle.focus();
+  });
+
+  els.prioritySeg.addEventListener('click', function (event) {
+    var btn = event.target.closest('button[data-priority]');
+    if (btn) setPriority(Number(btn.dataset.priority));
+  });
+
+  els.keySave.addEventListener('click', function () {
+    if (els.overlay.hidden) {
+      var key = els.keyInput.value.trim();
+      if (!key) {
+        showConnect();
+        return;
+      }
+      connectWithKey(key);
+    } else {
+      showConnect();
+    }
+  });
+
+  els.keyInput.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      connectWithKey(els.keyInput.value);
+    }
+  });
+
+  els.connectBtn.addEventListener('click', function () {
+    connectWithKey(els.connectKey.value);
+  });
+
+  els.connectKey.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      connectWithKey(els.connectKey.value);
+    }
+  });
+
+  els.skipConnect.addEventListener('click', function () {
+    hideConnect();
+    render();
+  });
+
+  els.filters.addEventListener('click', function (event) {
+    var btn = event.target.closest('button[data-filter]');
+    if (!btn) return;
+    state.filter = btn.dataset.filter;
+    Array.prototype.forEach.call(els.filters.querySelectorAll('.filter'), function (item) {
+      item.classList.toggle('active', item === btn);
+    });
+    renderList();
+    renderListHeader();
+  });
+
+  els.autoRefresh.addEventListener('change', function () {
+    state.autoRefresh = els.autoRefresh.checked;
+    localStorage.setItem(LS_AUTO, state.autoRefresh ? '1' : '0');
+    renderStatus();
+    if (state.autoRefresh && state.connected) refresh({ silent: true });
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (shouldPoll() && (!state.lastSyncAt || Date.now() - state.lastSyncAt > POLL_MS)) {
+      refresh({ silent: true });
+    }
+  });
+
+  // ------------------------------------------------------------- Toast
+
+  function hideToast() {
+    els.toast.classList.remove('show');
+  }
+
+  function toast(message, actionLabel, action) {
+    els.toast.innerHTML = '';
+    var text = document.createElement('span');
+    text.textContent = message;
+    els.toast.appendChild(text);
+
+    if (actionLabel) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = actionLabel;
+      button.addEventListener('click', function () {
+        hideToast();
+        if (typeof action === 'function') action();
+      });
+      els.toast.appendChild(button);
+    }
+
+    els.toast.classList.add('show');
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(hideToast, actionLabel ? 6000 : 2600);
+  }
+
+  // ---------------------------------------------------------------- 启动
+
+  els.serverAddr.textContent = window.location.host || '127.0.0.1:8788';
+
+  // 支持用 ?key=xxx 直接进入（方便存书签），进入后把 key 从地址栏抹掉
+  var urlKey = '';
+  try { urlKey = (new URLSearchParams(window.location.search).get('key') || '').trim(); } catch (e) { urlKey = ''; }
+  if (urlKey) {
+    localStorage.setItem(LS_KEY, urlKey);
+    try {
+      var cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('key');
+      window.history.replaceState(null, '', cleanUrl.toString());
+    } catch (e) { /* 忽略 */ }
+  }
+
+  els.keyInput.value = (localStorage.getItem(LS_KEY) || '').trim();
+  state.apiKey = els.keyInput.value;
+  state.autoRefresh = localStorage.getItem(LS_AUTO) !== '0';
+  els.autoRefresh.checked = state.autoRefresh;
+
+  if (state.apiKey) {
+    refresh({ silent: true });
+  } else {
+    state.loading = false;
+    render();
+    showConnect();
+  }
+
+  function shouldPoll() {
+    return state.autoRefresh && !!state.apiKey && !state.authFailed && !state.refreshing &&
+      document.visibilityState === 'visible' && els.overlay.hidden;
+  }
+
+  window.setInterval(function () {
+    renderStatus();
+    if (shouldPoll()) refresh({ silent: true });
+  }, POLL_MS);
+})();
+</script>
+</body>
+</html>

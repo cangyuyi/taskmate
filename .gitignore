@@ -1,0 +1,37 @@
+# ---- Android / Gradle ----
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# ---- 构建产物（走 GitHub Releases 分发）----
+dist/
+*.apk
+*.aab
+
+# ---- 签名与本地密钥（绝对不要提交）----
+keystore/
+keystore.properties
+*.jks
+*.keystore
+
+# ---- 便携工具链（约 2 GB）----
+.toolchain/
+
+# ---- 服务端运行产物 ----
+server/data/
+server/.env
+server/.venv*/
+server/__pycache__/
+server/.pycache/
+server/tests/__pycache__/
+
+# ---- 与具体网络绑定的临时文件 ----
+preview/apk-download-qr.png
+*.log
+.DS_Store

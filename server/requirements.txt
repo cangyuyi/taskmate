@@ -1,0 +1,5 @@
+fastapi>=0.100,<1.0
+uvicorn>=0.23,<1.0
+
+# 可选：自动加载 server/.env（未安装时直接读系统环境变量也能运行）
+python-dotenv>=1.0,<2.0
