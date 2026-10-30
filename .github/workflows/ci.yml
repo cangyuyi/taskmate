@@ -9,6 +9,9 @@ jobs:
   android:
     name: Android 构建与单元测试
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
     steps:
       - uses: actions/checkout@v4
 
@@ -17,7 +20,14 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+
+      # 直接用 runner 自带的 SDK（setup-android 会执行已下线的 sdkmanager tools）
+      - name: 接受 SDK 许可
+        run: |
+          SDKMANAGER=$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | head -1)
+          if [ -n "$SDKMANAGER" ]; then yes | "$SDKMANAGER" --licenses > /dev/null 2>&1 || true; fi
+          chmod +x gradlew
 
       - name: 单元测试
         run: ./gradlew :app:testReleaseUnitTest --no-daemon --console=plain
