@@ -111,7 +111,7 @@ flowchart LR
 
 ### 直接装（推荐）
 
-到 [Releases](../../releases) 下载最新的 `TaskMate-x.y.apk`，传到手机安装。
+到 [Releases](https://github.com/cangyuyi/taskmate/releases) 下载最新的 `TaskMate-x.y.apk`，传到手机安装。
 
 ### 自己构建
 
